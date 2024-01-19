@@ -46,6 +46,10 @@ async def setskill(update,context):
 
 async def instart(update,context):
     user_id = update.effective_user.id
+    if user_id not in user_job or not user_job[user_id]:
+        await update.message.reply_text('You need to set the job first using /setting command.')
+        return CONVERSATION
+    
     await update.message.reply_text(f'This is an interview for \'{user_job[user_id]}\'\n\nUse /end for stop the interview')
     return INTERVIEW
 
@@ -64,9 +68,10 @@ async def reply_to_message(update: Update, context: CallbackContext):
 
     user_chat_history[user_id].append({"role": "user", "content": user_input})
 
+    await context.bot.send_chat_action(chat_id=update.message.chat_id , action = telegram.constants.ChatAction.TYPING)
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-16k",
-        messages=[{"role": "system", "content": f'I want you to act as an interviewer. I will be the candidate and you will ask me the interview questions for the position of {user_job[user_id]} and my skills are {user_skills[user_id]}(you speak in language that she/he talk to you). I want you to only reply as the interviewer. Do not write all the conservation at once. I want you to only do the interview with me. Ask me the questions and wait for my answers. Do not write explanations. Ask me the questions one by one like an interviewer does and wait for my answers.' }, *user_chat_history[user_id]],
+        messages=[{"role": "system", "content": f'I want you to act as an interviewer. The person who ask you will be the candidate and you will ask me the interview questions for the position of {user_job[user_id]} and his/her skills are {user_skills[user_id]}(you speak in language that she/he talk to you). I want you to only reply as the interviewer.say hi once and dont say hi in any languages in every questions. Do not write all the conservation at once. I want you to only do the interview with me. Ask me the questions and wait for my answers. Do not write explanations. Ask me the questions one by one like an interviewer does and wait for my answers.' }, *user_chat_history[user_id]],
         n=1,
         stop=None
     )
